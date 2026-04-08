@@ -11,7 +11,7 @@ import Calculator from './pages/Calculator'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <DndProvider backend={HTML5Backend}>
         <ChatbotProvider>
           <div style={{ width: '100vw', minHeight: '100vh', overflowX: 'hidden' }}>
