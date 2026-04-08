@@ -221,7 +221,7 @@ export default function Home() {
           {/* Right: hero image */}
           <div style={{ flex: '1 1 320px', minWidth: 260, display: 'flex', justifyContent: 'center' }}>
             <img
-              src="/hero-collage.png"
+              src={`${import.meta.env.BASE_URL}hero-collage.png`}
               alt="Learn crypto and blockchain with Bitskwela"
               style={{
                 width: '100%', maxWidth: 440, objectFit: 'contain',
@@ -367,7 +367,7 @@ export default function Home() {
 
             {/* About */}
             <div>
-              <img src="/BitskwelaLogo-04.png" alt="Bitskwela" style={{ height: 28, marginBottom: 18 }} />
+              <img src={`${import.meta.env.BASE_URL}BitskwelaLogo-04.png`} alt="Bitskwela" style={{ height: 28, marginBottom: 18 }} />
               <p style={{ fontSize: 13, color: '#666', lineHeight: 1.8, marginBottom: 16 }}>
                 Bitskwela is a Filipino-led edutech platform that strives to make
                 Bitcoin and cryptocurrency education accessible to all Filipinos

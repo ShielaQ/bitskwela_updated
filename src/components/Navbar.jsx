@@ -29,7 +29,7 @@ export default function Navbar() {
         to="/"
         style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 48, flexShrink: 0 }}
       >
-        <img src="/BitskwelaLogo-04.png" alt="Bitskwela" style={{ height: 30, display: 'block' }} />
+        <img src={`${import.meta.env.BASE_URL}BitskwelaLogo-04.png`} alt="Bitskwela" style={{ height: 30, display: 'block' }} />
       </Link>
 
       {/* Nav links */}

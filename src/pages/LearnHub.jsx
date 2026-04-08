@@ -154,7 +154,7 @@ export default function LearnHub() {
           {/* Right image */}
           <div style={{ flex: '0 0 auto' }}>
             <img
-              src="/learn-banner.png"
+              src={`${import.meta.env.BASE_URL}learn-banner.png`}
               alt="Web3 learning modules"
               style={{
                 height: 160,
@@ -195,7 +195,7 @@ export default function LearnHub() {
             gap: 48, paddingBottom: 36, borderBottom: '1px solid #EBEBEB',
           }}>
             <div>
-              <img src="/BitskwelaLogo-04.png" alt="Bitskwela" style={{ height: 26, marginBottom: 16 }} />
+              <img src={`${import.meta.env.BASE_URL}BitskwelaLogo-04.png`} alt="Bitskwela" style={{ height: 26, marginBottom: 16 }} />
               <p style={{ fontSize: 13, color: '#666', lineHeight: 1.75, marginBottom: 10 }}>
                 Filipino-led Web3 education. Free for everyone.
               </p>
