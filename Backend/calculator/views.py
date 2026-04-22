@@ -1,8 +1,9 @@
 from requests import RequestException
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.responses import error_response, success_response
+from core.throttles import CalculateRateThrottle
 
 from .coingecko import CoinGeckoClient
 from .models import CalculationSession
@@ -69,6 +70,7 @@ def crypto_instruments(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([CalculateRateThrottle])
 def calculate(request):
     serializer = CalculateSerializer(data=request.data)
     if not serializer.is_valid():

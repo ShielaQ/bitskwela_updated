@@ -1,7 +1,8 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 
 from core.responses import error_response, success_response
+from core.throttles import ChatRateThrottle
 
 from .models import ChatConversation, ChatMessage
 from .serializers import ChatHistoryQuerySerializer, ChatRequestSerializer
@@ -10,6 +11,7 @@ from .services import llm_first_chat_reply
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ChatRateThrottle])
 def chat(request):
     serializer = ChatRequestSerializer(data=request.data)
     if not serializer.is_valid():

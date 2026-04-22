@@ -1,4 +1,9 @@
+import hashlib
+import json
+import os
 from decimal import Decimal
+
+from django.core.cache import cache
 
 from .forecast_client import ForecastClient, ForecastServiceError
 from .llm_client import LLMClient, LLMServiceError
@@ -15,7 +20,14 @@ def forecast_crypto_return(*, instrument_key, amount, horizon_days, mode):
         "mode": mode,
     }
 
-    forecast_data = forecast_client.forecast(payload)
+    cache_ttl = int(os.getenv("FORECAST_CACHE_TTL_SECONDS", "300"))
+    payload_hash = hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+    cache_key = f"forecast:{payload_hash}"
+    forecast_data = cache.get(cache_key)
+    if forecast_data is None:
+        forecast_data = forecast_client.forecast(payload)
+        cache.set(cache_key, forecast_data, timeout=cache_ttl)
+
     annual_return = Decimal(str(forecast_data["annual_return"]))
 
     llm_info = None
@@ -43,4 +55,3 @@ def forecast_crypto_return(*, instrument_key, amount, horizon_days, mode):
 
 
 __all__ = ["ForecastServiceError", "forecast_crypto_return"]
-

@@ -1,6 +1,7 @@
 import os
 
 import requests
+from django.core.cache import cache
 
 
 class CoinGeckoClient:
@@ -17,6 +18,12 @@ class CoinGeckoClient:
         return headers
 
     def get_top_coins(self, vs_currency="php", per_page=20, page=1):
+        cache_ttl = int(os.getenv("COINGECKO_CACHE_TTL_SECONDS", "120"))
+        cache_key = f"coingecko:markets:{vs_currency}:{per_page}:{page}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         url = f"{self.base_url}/coins/markets"
         params = {
             "vs_currency": vs_currency,
@@ -31,7 +38,7 @@ class CoinGeckoClient:
         response.raise_for_status()
         coins = response.json()
 
-        return [
+        result = [
             {
                 "key": coin.get("id"),
                 "symbol": coin.get("symbol"),
@@ -44,4 +51,5 @@ class CoinGeckoClient:
             }
             for coin in coins
         ]
-
+        cache.set(cache_key, result, timeout=cache_ttl)
+        return result
