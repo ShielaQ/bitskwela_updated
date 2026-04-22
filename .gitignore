@@ -2,3 +2,9 @@ Backend/venv/
 Frontend/**/node_modules/
 Backend/.env
 Backend/db.sqlite3
+node_modules
+dist
+.env
+.env.local
+*.log
+.DS_Store

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/bitskwela_updated/BitskwelaLogo-04.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitskwela — Learn Web3 & Crypto for Free</title>
+    <script>
+      // handle redirect from 404.html for client-side routing
+      (function() {
+        var p = window.location.search.match(/[?&]p=([^&]+)/);
+        if (p) history.replaceState(null, null, '/' + decodeURIComponent(p[1]));
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
