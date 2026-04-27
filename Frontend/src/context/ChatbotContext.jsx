@@ -1,6 +1,7 @@
-import { createContext, useContext, useState } from 'react'
+import { useState } from 'react'
+import { ChatbotContext } from './chatbotContext'
 
-const ChatbotContext = createContext(null)
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 
 // first message shown when chatbot opens
 const INITIAL_MESSAGES = [
@@ -27,7 +28,7 @@ const QUICK_REPLIES_FALLBACK = [
 ]
 
 // keyword responses
-const RESPONSE_BANK = [
+export const RESPONSE_BANK = [
   {
     keywords: ['hello', 'hi ', 'hey', 'kamusta', 'kumusta', 'musta', 'good morning', 'good afternoon', 'good evening', 'sup'],
     text: "Hey! Happy to help. You can ask me about Bitcoin, Ethereum, wallets, DeFi, blockchain basics, investing, or how to use the tools on this site. What do you want to learn first?",
@@ -168,17 +169,6 @@ const DEFAULT_RESPONSE = {
   showLearnLink: true,
 }
 
-// look for matching keywords in the user's message
-function findResponse(input) {
-  const lower = input.toLowerCase()
-  for (const item of RESPONSE_BANK) {
-    if (item.keywords.some(k => lower.includes(k))) {
-      return { text: item.text, showLearnLink: false }
-    }
-  }
-  return DEFAULT_RESPONSE
-}
-
 // context provider
 export function ChatbotProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -187,29 +177,44 @@ export function ChatbotProvider({ children }) {
   const [quickReplies, setQuickReplies] = useState(QUICK_REPLIES_INITIAL)
   const [inputText, setInputText] = useState('')
 
-  const sendMessage = (text) => {
+  const sendMessage = async (text) => {
     const userMsg = { id: Date.now(), type: 'user', text }
     setMessages(prev => [...prev, userMsg])
     setShowQuickReplies(false)
     setInputText('')
 
-    const response = findResponse(text)
+    let botText = ''
+    const showLearnLink = false
 
-    setTimeout(() => {
-      const botMsg = {
-        id: Date.now() + 1,
-        type: 'bot',
-        text: response.text,
-        showLearnLink: response.showLearnLink,
-      }
-      setMessages(prev => [...prev, botMsg])
+    const res = await fetch(`${API_BASE_URL}/api/v1/chat/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: text,
+        screen: 'global',
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok || !json?.success) {
+      botText = "Sorry — I'm having trouble responding right now. Please try again in a moment."
+    } else {
+      botText = json.data.reply
+    }
 
-      // Show fallback quick replies after default response
-      if (response.showLearnLink) {
-        setQuickReplies(QUICK_REPLIES_FALLBACK)
-        setShowQuickReplies(true)
-      }
-    }, 500)
+    const botMsg = {
+      id: Date.now() + 1,
+      type: 'bot',
+      text: botText,
+      showLearnLink,
+    }
+    setMessages(prev => [...prev, botMsg])
+
+    if (showLearnLink) {
+      setQuickReplies(QUICK_REPLIES_FALLBACK)
+      setShowQuickReplies(true)
+    }
   }
 
   const resetChat = () => {
@@ -235,5 +240,3 @@ export function ChatbotProvider({ children }) {
     </ChatbotContext.Provider>
   )
 }
-
-export const useChatbot = () => useContext(ChatbotContext)

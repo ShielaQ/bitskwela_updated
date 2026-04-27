@@ -78,3 +78,14 @@ MODE_MULTIPLIERS = {
     "aggressive": 1.75,
 }
 
+INSTRUMENT_ALIASES = {
+    "traditional": {
+        "pagibig": "pagibig_mp2",
+        "tbill": "tbill_rtb",
+        "td": "bank_time_deposit",
+        "realestate": "real_estate_baseline",
+    },
+    "crypto": {
+        "usdt": "tether",
+    },
+}

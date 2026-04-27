@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useChatbot } from '../context/ChatbotContext'
+import { useChatbot } from '../hooks/useChatbot'
 
 // svg icons
 function IconChat() {

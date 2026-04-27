@@ -2,15 +2,20 @@ from decimal import Decimal
 
 from ai.services import ForecastServiceError, forecast_crypto_return
 
-from .constants import CRYPTO_BASELINE_RETURNS, MODE_MULTIPLIERS, TRADITIONAL_INSTRUMENTS
+from .constants import CRYPTO_BASELINE_RETURNS, MODE_MULTIPLIERS
+from .rates_provider import get_live_rates_snapshot
 
 
 def list_traditional_instruments():
-    return TRADITIONAL_INSTRUMENTS
+    return get_live_rates_snapshot()["traditional_rates"]
+
+
+def list_crypto_rate_proxies():
+    return get_live_rates_snapshot()["crypto_rate_proxies"]
 
 
 def get_traditional_rate(instrument_key):
-    for item in TRADITIONAL_INSTRUMENTS:
+    for item in list_traditional_instruments():
         if item["key"] == instrument_key:
             return Decimal(str(item["annual_return"])), item
     return None, None
@@ -97,7 +102,7 @@ def calculate_projection(*, instrument_type, instrument_key, amount, horizon_day
     pct = (profit / principal) * Decimal("100")
     chart_data = build_chart_data(principal, annual_return, days, mode_multiplier)
 
-    return {
+    result = {
         "instrument_type": instrument_type,
         "instrument_key": instrument_key,
         "horizon_days": days,
@@ -115,3 +120,6 @@ def calculate_projection(*, instrument_type, instrument_key, amount, horizon_day
         "forecast_meta": forecast_meta,
         "llm_info": llm_info,
     }
+    result["projected"] = result["projected_value"]
+    result["chartData"] = result["chart_data"]
+    return result

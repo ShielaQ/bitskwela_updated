@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useChatbot } from '../context/ChatbotContext'
+import { useChatbot } from '../hooks/useChatbot'
 
 const NAV_LINKS = [
   { to: '/',           label: 'Home'        },

@@ -2,6 +2,8 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
+from .constants import INSTRUMENT_ALIASES
+
 
 class CalculateSerializer(serializers.Serializer):
     instrument_type = serializers.ChoiceField(choices=["crypto", "traditional"])
@@ -20,3 +22,9 @@ class CalculateSerializer(serializers.Serializer):
         allow_null=True,
     )
 
+    def validate(self, attrs):
+        instrument_type = attrs["instrument_type"]
+        instrument_key = attrs["instrument_key"]
+        aliases = INSTRUMENT_ALIASES.get(instrument_type, {})
+        attrs["instrument_key"] = aliases.get(instrument_key, instrument_key)
+        return attrs

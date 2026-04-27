@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -6,27 +6,29 @@ import {
 } from 'recharts'
 import { fmtPeso } from '../utils/formatters'
 
-// investment type data
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
+
+// investment type data + UI defaults; annualReturn is backend-driven
 const INVESTMENT_TYPES = {
   Crypto: [
-    { value: 'bitcoin',  label: 'Bitcoin (BTC)',     annualReturn: 0.80, risk: 'high',   color: '#F7931A' },
-    { value: 'ethereum', label: 'Ethereum (ETH)',    annualReturn: 0.60, risk: 'high',   color: '#627EEA' },
-    { value: 'solana',   label: 'Solana (SOL)',      annualReturn: 1.20, risk: 'high',   color: '#9945FF' },
-    { value: 'usdt',     label: 'USDT Staking',      annualReturn: 0.08, risk: 'low',    color: '#26A17B' },
+    { value: 'bitcoin',  label: 'Bitcoin (BTC)',  fallbackAnnualReturn: 0.80, risk: 'high', color: '#F7931A', backendKey: 'bitcoin' },
+    { value: 'ethereum', label: 'Ethereum (ETH)', fallbackAnnualReturn: 0.60, risk: 'high', color: '#627EEA', backendKey: 'ethereum' },
+    { value: 'solana',   label: 'Solana (SOL)',   fallbackAnnualReturn: 1.20, risk: 'high', color: '#9945FF', backendKey: 'solana' },
+    { value: 'usdt',     label: 'USDT Staking',   fallbackAnnualReturn: 0.08, risk: 'low',  color: '#26A17B', backendKey: 'tether' },
   ],
   Government: [
-    { value: 'pagibig',  label: 'Pag-IBIG MP2',          annualReturn: 0.070, risk: 'none',   color: '#1D4ED8' },
-    { value: 'tbill',   label: 'Treasury Bills',          annualReturn: 0.062, risk: 'none',   color: '#2563EB' },
-    { value: 'rtb',     label: 'Retail Treasury Bonds',   annualReturn: 0.065, risk: 'none',   color: '#3B82F6' },
+    { value: 'pagibig',  label: 'Pag-IBIG MP2',         fallbackAnnualReturn: 0.070, risk: 'none', color: '#1D4ED8', backendKey: 'pagibig_mp2' },
+    { value: 'tbill',    label: 'Treasury Bills',       fallbackAnnualReturn: 0.062, risk: 'none', color: '#2563EB', backendKey: 'tbill_rtb' },
+    { value: 'rtb',      label: 'Retail Treasury Bonds',fallbackAnnualReturn: 0.065, risk: 'none', color: '#3B82F6', backendKey: 'tbill_rtb' },
   ],
   Banking: [
-    { value: 'savings',    label: 'Regular Savings Account', annualReturn: 0.005, risk: 'none', color: '#64748B' },
-    { value: 'td',         label: 'Time Deposit (1 yr)',      annualReturn: 0.045, risk: 'none', color: '#475569' },
-    { value: 'hysavings',  label: 'High-Yield Savings',       annualReturn: 0.025, risk: 'none', color: '#334155' },
+    { value: 'savings',   label: 'Regular Savings Account', fallbackAnnualReturn: 0.005, risk: 'none', color: '#64748B' },
+    { value: 'td',        label: 'Time Deposit (1 yr)',     fallbackAnnualReturn: 0.045, risk: 'none', color: '#475569', backendKey: 'bank_time_deposit' },
+    { value: 'hysavings', label: 'High-Yield Savings',      fallbackAnnualReturn: 0.025, risk: 'none', color: '#334155', backendKey: 'bank_time_deposit' },
   ],
   'Real Estate': [
-    { value: 'realestate', label: 'Philippine Real Estate', annualReturn: 0.08, risk: 'medium', color: '#78350F' },
-    { value: 'reit',       label: 'REITs (AREIT)',           annualReturn: 0.06, risk: 'medium', color: '#92400E' },
+    { value: 'realestate', label: 'Philippine Real Estate', fallbackAnnualReturn: 0.08, risk: 'medium', color: '#78350F', backendKey: 'real_estate_baseline' },
+    { value: 'reit',       label: 'REITs (AREIT)',          fallbackAnnualReturn: 0.06, risk: 'medium', color: '#92400E', backendKey: 'real_estate_baseline' },
   ],
 }
 
@@ -41,6 +43,13 @@ const HORIZONS = [
 
 const MODES      = ['Conservative', 'Moderate', 'Aggressive']
 const MODE_MULT  = { Conservative: 0.45, Moderate: 1.0, Aggressive: 1.75 }
+
+function buildBackendRateMap(payload) {
+  const map = {}
+  ;(payload?.traditional_rates || []).forEach(item => { map[item.key] = item })
+  ;(payload?.crypto_rate_proxies || []).forEach(item => { map[item.key] = item })
+  return map
+}
 
 // helpers
 function buildChartData(principal, annualReturn, days, modeMult) {
@@ -99,9 +108,49 @@ export default function Calculator() {
   const [horizonDays,  setHorizonDays]  = useState(365)
   const [mode,         setMode]         = useState('Moderate')
   const [result,       setResult]       = useState(null)
+  const [ratesPayload, setRatesPayload] = useState(null)
+  const [ratesError,   setRatesError]   = useState('')
 
-  const allOptions = Object.entries(INVESTMENT_TYPES).flatMap(([group, items]) =>
-    items.map(i => ({ ...i, group }))
+  useEffect(() => {
+    let active = true
+    async function loadRates() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/rates/`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        if (!json?.success) throw new Error(json?.message || 'Rates request failed')
+        if (active) setRatesPayload(json.data || null)
+      } catch {
+        if (active) setRatesError('Live rates unavailable, using safe defaults.')
+      }
+    }
+    loadRates()
+    return () => { active = false }
+  }, [])
+
+  const allOptions = useMemo(() => {
+    const backendRateMap = buildBackendRateMap(ratesPayload)
+    return Object.entries(INVESTMENT_TYPES).flatMap(([group, items]) =>
+      items.map(item => {
+        const backendRate = item.backendKey ? backendRateMap[item.backendKey] : null
+        const annualReturn = backendRate?.annual_return ?? item.fallbackAnnualReturn
+        return {
+          ...item,
+          group,
+          annualReturn,
+          rateMeta: backendRate || null,
+        }
+      })
+    )
+  }, [ratesPayload])
+  const groupedOptions = useMemo(
+    () =>
+      allOptions.reduce((acc, item) => {
+        if (!acc[item.group]) acc[item.group] = []
+        acc[item.group].push(item)
+        return acc
+      }, {}),
+    [allOptions]
   )
   const selectedInfo = allOptions.find(o => o.value === selectedType)
   const isCrypto     = selectedInfo?.group === 'Crypto'
@@ -237,7 +286,7 @@ export default function Calculator() {
                     onBlur={e  => e.target.style.borderColor = '#E8E8E8'}
                   >
                     <option value="">Select investment type...</option>
-                    {Object.entries(INVESTMENT_TYPES).map(([group, items]) => (
+                    {Object.entries(groupedOptions).map(([group, items]) => (
                       <optgroup key={group} label={group}>
                         {items.map(item => (
                           <option key={item.value} value={item.value}>
@@ -249,7 +298,7 @@ export default function Calculator() {
                   </select>
                 </div>
                 {selectedInfo && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                     <div style={{
                       width: 8, height: 8, borderRadius: '50%',
                       background: selectedInfo.color, flexShrink: 0,
@@ -258,7 +307,15 @@ export default function Calculator() {
                       Est. {(selectedInfo.annualReturn * 100).toFixed(1)}% annual return
                     </span>
                     <RiskBadge risk={selectedInfo.risk} />
+                    {selectedInfo.rateMeta?.source && (
+                      <span style={{ fontSize: 11, color: '#999' }}>
+                        Source: {selectedInfo.rateMeta.source}{selectedInfo.rateMeta.is_fallback ? ' (fallback)' : ''}
+                      </span>
+                    )}
                   </div>
+                )}
+                {!!ratesError && (
+                  <p style={{ margin: '8px 0 0', fontSize: 11, color: '#B45309' }}>{ratesError}</p>
                 )}
               </Field>
 

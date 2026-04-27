@@ -6,7 +6,9 @@ from core.responses import error_response, success_response
 from core.throttles import CalculateRateThrottle
 
 from .coingecko import CoinGeckoClient
+from .constants import CRYPTO_BASELINE_RETURNS
 from .models import CalculationSession
+from .rates_provider import get_live_rates_snapshot
 from .serializers import CalculateSerializer
 from .services import calculate_projection, list_traditional_instruments
 
@@ -30,10 +32,14 @@ def investments(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def rates(request):
+    snapshot = get_live_rates_snapshot()
     return success_response(
         data={
-            "traditional_rates": list_traditional_instruments(),
-            "note": "PH traditional rates are baseline/manual-update values for now.",
+            "traditional_rates": snapshot["traditional_rates"],
+            "crypto_rate_proxies": snapshot["crypto_rate_proxies"],
+            "updated_at": snapshot["updated_at"],
+            "fallback_used": snapshot["fallback_used"],
+            "note": "Rates are web-sourced proxy values with automatic fallback to safe baselines.",
         },
         message="Traditional rates fetched",
     )
@@ -61,10 +67,30 @@ def crypto_instruments(request):
             message="Crypto instruments fetched",
         )
     except RequestException as exc:
-        return error_response(
-            message="Failed to fetch CoinGecko data",
-            error={"detail": str(exc)},
-            status_code=502,
+        fallback_items = [
+            {
+                "key": key,
+                "symbol": key.replace("-", "")[:6],
+                "name": key.replace("-", " ").title(),
+                "image": None,
+                "current_price": None,
+                "market_cap": None,
+                "market_cap_rank": None,
+                "price_change_percentage_24h": None,
+            }
+            for key in CRYPTO_BASELINE_RETURNS
+        ]
+        return success_response(
+            data={
+                "provider": "fallback_baseline",
+                "vs_currency": vs_currency,
+                "page": page,
+                "per_page": per_page,
+                "items": fallback_items[:per_page],
+                "degraded": True,
+                "degradation_reason": str(exc),
+            },
+            message="Crypto instruments fetched (fallback)",
         )
 
 

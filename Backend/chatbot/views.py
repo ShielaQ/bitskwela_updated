@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.responses import error_response, success_response
 from core.throttles import ChatRateThrottle
@@ -10,7 +10,7 @@ from .services import llm_first_chat_reply
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 @throttle_classes([ChatRateThrottle])
 def chat(request):
     serializer = ChatRequestSerializer(data=request.data)
@@ -25,8 +25,19 @@ def chat(request):
     context = serializer.validated_data.get("context", {})
     conversation_id = serializer.validated_data.get("conversation_id")
 
+    # Backward-compatible top-level context fields.
+    for key in ["screen", "module_key", "step_id", "attempt_count", "placements"]:
+        value = serializer.validated_data.get(key)
+        if value is not None:
+            context[key] = value
+
+    is_authenticated = bool(getattr(request, "user", None)) and request.user.is_authenticated
+
     if conversation_id:
-        conversation = ChatConversation.objects.filter(id=conversation_id, user=request.user).first()
+        if is_authenticated:
+            conversation = ChatConversation.objects.filter(id=conversation_id, user=request.user).first()
+        else:
+            conversation = ChatConversation.objects.filter(id=conversation_id, user__isnull=True).first()
         if not conversation:
             return error_response(
                 message="Conversation not found",
@@ -35,7 +46,7 @@ def chat(request):
             )
     else:
         conversation = ChatConversation.objects.create(
-            user=request.user,
+            user=(request.user if is_authenticated else None),
             title=(message[:80] if message else "New conversation"),
         )
 

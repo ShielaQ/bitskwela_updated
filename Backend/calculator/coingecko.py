@@ -17,9 +17,13 @@ class CoinGeckoClient:
             headers[self.api_key_header] = self.api_key
         return headers
 
-    def get_top_coins(self, vs_currency="php", per_page=20, page=1):
+    def get_markets(self, *, vs_currency="php", per_page=20, page=1, ids=None, price_change_percentage="24h"):
+        ids_part = ",".join(ids or [])
         cache_ttl = int(os.getenv("COINGECKO_CACHE_TTL_SECONDS", "120"))
-        cache_key = f"coingecko:markets:{vs_currency}:{per_page}:{page}"
+        cache_key = (
+            f"coingecko:markets:{vs_currency}:{per_page}:{page}:"
+            f"{ids_part}:{price_change_percentage}"
+        )
         cached = cache.get(cache_key)
         if cached is not None:
             return cached
@@ -31,12 +35,19 @@ class CoinGeckoClient:
             "per_page": per_page,
             "page": page,
             "sparkline": "false",
-            "price_change_percentage": "24h",
+            "price_change_percentage": price_change_percentage,
         }
+        if ids_part:
+            params["ids"] = ids_part
 
         response = requests.get(url, params=params, headers=self._headers(), timeout=self.timeout)
         response.raise_for_status()
-        coins = response.json()
+        result = response.json()
+        cache.set(cache_key, result, timeout=cache_ttl)
+        return result
+
+    def get_top_coins(self, vs_currency="php", per_page=20, page=1):
+        coins = self.get_markets(vs_currency=vs_currency, per_page=per_page, page=page, price_change_percentage="24h")
 
         result = [
             {
@@ -51,5 +62,4 @@ class CoinGeckoClient:
             }
             for coin in coins
         ]
-        cache.set(cache_key, result, timeout=cache_ttl)
         return result

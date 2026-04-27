@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDrag, useDrop } from 'react-dnd'
 import { getModule } from '../data/simulationData'
@@ -267,7 +267,7 @@ export default function Simulation() {
   const usedItems   = new Set(Object.values(placements).map(p => p.id))
   const progressPct = Math.round((placedCount / totalZones) * 100)
 
-  const handleDrop = useCallback((dragged, zoneId) => {
+  const handleDrop = (dragged, zoneId) => {
     if (dragged.correctZone === zoneId) {
       const fullItem = step.items.find(i => i.id === dragged.id)
       setPlacements(prev => ({ ...prev, [zoneId]: fullItem }))
@@ -278,7 +278,7 @@ export default function Simulation() {
       setWrongHint(`That one doesn't go in "${zoneName}" — give another zone a try.`)
       setTimeout(() => setShaking(null), 380)
     }
-  }, [step])
+  }
 
   const handleReset = () => {
     setPlacements({})
