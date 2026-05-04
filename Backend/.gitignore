@@ -19,3 +19,16 @@ db.sqlite3
 # Python secrets/certs
 *.pem
 *.key
+
+Backend/venv/
+Frontend/**/node_modules/
+Backend/.env
+Backend/db.sqlite3
+node_modules
+dist
+.env
+.env.local
+!Frontend/.env
+*.log
+.DS_Store
+
