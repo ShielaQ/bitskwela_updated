@@ -38,6 +38,87 @@ function IconArrow() {
   )
 }
 
+const INLINE_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*)/g
+
+const renderInline = (text, keyPrefix) => {
+  if (!text) return null
+  return text
+    .split(INLINE_PATTERN)
+    .filter(Boolean)
+    .map((segment, index) => {
+      if (segment.startsWith('**') && segment.endsWith('**')) {
+        return (
+          <strong key={`${keyPrefix}-bold-${index}`}>
+            {segment.slice(2, -2)}
+          </strong>
+        )
+      }
+      if (segment.startsWith('*') && segment.endsWith('*')) {
+        return (
+          <em key={`${keyPrefix}-italic-${index}`}>
+            {segment.slice(1, -1)}
+          </em>
+        )
+      }
+      return <span key={`${keyPrefix}-text-${index}`}>{segment}</span>
+    })
+}
+
+const renderRichText = (text) => {
+  if (typeof text !== 'string') return text
+  const lines = text.split(/\r?\n/)
+  const blocks = []
+  let listItems = []
+
+  const flushList = () => {
+    if (listItems.length) {
+      blocks.push({ type: 'list', items: listItems })
+      listItems = []
+    }
+  }
+
+  lines.forEach((line) => {
+    const match = line.match(/^\s*[-*]\s+(.*)$/)
+    if (match) {
+      listItems.push(match[1])
+      return
+    }
+    flushList()
+    blocks.push({ type: 'paragraph', text: line })
+  })
+
+  flushList()
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {blocks.map((block, index) => {
+        if (block.type === 'list') {
+          return (
+            <ul key={`list-${index}`} style={{ margin: 0, paddingLeft: 18 }}>
+              {block.items.map((item, itemIndex) => (
+                <li
+                  key={`list-${index}-item-${itemIndex}`}
+                  style={{ marginBottom: itemIndex === block.items.length - 1 ? 0 : 4 }}
+                >
+                  {renderInline(item, `list-${index}-item-${itemIndex}`)}
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        if (!block.text.trim()) {
+          return <div key={`spacer-${index}`} style={{ height: 6 }} />
+        }
+        return (
+          <p key={`p-${index}`} style={{ margin: 0 }}>
+            {renderInline(block.text, `p-${index}`)}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 // chatbot widget component
 export default function ChatbotWidget() {
   const {
@@ -190,7 +271,7 @@ export default function ChatbotWidget() {
                     background: msg.type === 'bot' ? '#F4F4F8' : '#F7931A',
                     color:      msg.type === 'bot' ? '#444' : '#fff',
                   }}>
-                    {msg.text}
+                    {renderRichText(msg.text)}
                   </div>
                 </div>
 
