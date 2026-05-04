@@ -6,6 +6,7 @@ node_modules
 dist
 .env
 .env.local
-!Frontend/.env
+Frontend/.env
+localhost+1*.pem
 *.log
 .DS_Store
