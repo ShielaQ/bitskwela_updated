@@ -182,13 +182,14 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
         border: `2px dashed ${borderColor}`,
         borderRadius: 12,
         background: bg,
-        padding: isMobile ? '14px 10px' : (filled ? '16px 18px' : '24px 16px'),
+        padding: isMobile ? '10px 10px' : (filled ? '16px 18px' : '24px 16px'),
         display: 'flex',
         flexDirection: 'column',
         alignItems: filled ? 'flex-start' : 'center',
         justifyContent: filled ? 'flex-start' : 'center',
         textAlign: filled ? 'left' : 'center',
-        minHeight: isMobile ? 110 : 140,
+        minHeight: isMobile ? 90 : 140,
+        overflow: 'hidden',
         transition: 'border-color 0.15s, background 0.15s',
         position: 'relative',
       }}
@@ -197,10 +198,10 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
         <>
           {/* Zone icon */}
           <div style={{
-            width: 40, height: 40, borderRadius: 10,
+            width: isMobile ? 32 : 40, height: isMobile ? 32 : 40, borderRadius: 10,
             background: invalidHover ? '#FEE2E2' : validHover ? '#FEF5E7' : '#F0F0F0',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 12,
+            marginBottom: isMobile ? 8 : 12,
             color: invalidHover ? '#DC2626' : validHover ? '#F7931A' : '#AAAAAA',
             transition: 'background 0.15s, color 0.15s',
           }}>
@@ -225,10 +226,43 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
             </p>
           )}
         </>
+      ) : isMobile ? (
+        /* Mobile filled zone — ultra compact, no overflow */
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <div style={{
+              width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+              background: '#16A34A',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div style={{
+              width: 20, height: 20, borderRadius: 4, flexShrink: 0,
+              background: placedItem.bg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 8, fontWeight: 700, color: placedItem.color, fontFamily: 'monospace',
+            }}>
+              {placedItem.abbr}
+            </div>
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: '#222',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+            }}>
+              {placedItem.label}
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {zone.label}
+          </p>
+        </div>
       ) : (
+        /* Desktop filled zone — full card */
         <div style={{ width: '100%', textAlign: 'left' }}>
 
-          {/* Header row: check + placed item */}
+          {/* Header row: check + placed item chip */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{
               width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
@@ -241,6 +275,7 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
               display: 'flex', alignItems: 'center', gap: 7, flex: 1,
               padding: '5px 10px', borderRadius: 8,
               background: '#fff', border: '1px solid #A3E4B8',
+              overflow: 'hidden',
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: 5, flexShrink: 0,
@@ -250,7 +285,7 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
               }}>
                 {placedItem.abbr}
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#222', flex: 1 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#222', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {placedItem.label}
               </span>
               <span style={{ fontSize: 11, fontWeight: 600, color: '#16A34A', flexShrink: 0 }}>
@@ -260,12 +295,12 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
           </div>
 
           {/* Zone label */}
-          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {zone.label}
           </p>
 
           {/* Explanation */}
-          {explanation && !isMobile && (
+          {explanation && (
             <p style={{ margin: 0, fontSize: 12, color: '#555', lineHeight: 1.6 }}>
               {explanation}
             </p>
