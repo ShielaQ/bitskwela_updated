@@ -1,4 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom'
+import { useIsMobile } from '../utils/useIsMobile'
 
 // svg icons
 function IconArrow() {
@@ -94,6 +95,7 @@ const SOCIALS = [
 // main page component
 export default function LearnHub() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   return (
     <div style={{ paddingTop: 64, background: '#fff', minHeight: '100vh' }}>
@@ -101,7 +103,7 @@ export default function LearnHub() {
       {/* ── Page hero ────────────────────────────────────────────── */}
       <div style={{
         background: '#1A1A2E',
-        padding: '52px 48px',
+        padding: isMobile ? '32px 16px 28px' : '48px 48px 40px',
         position: 'relative',
         overflow: 'hidden',
       }}>
@@ -151,26 +153,28 @@ export default function LearnHub() {
             </p>
           </div>
 
-          {/* Right image */}
-          <div style={{ flex: '0 0 auto' }}>
-            <img
-              src={`${import.meta.env.BASE_URL}learn-banner.png`}
-              alt="Web3 learning modules"
-              style={{
-                height: 160,
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 16px 32px rgba(0,0,0,0.3))',
-              }}
-            />
-          </div>
+          {/* Right image — hidden on mobile */}
+          {!isMobile && (
+            <div style={{ flex: '0 0 auto' }}>
+              <img
+                src={`${import.meta.env.BASE_URL}learn-banner.png`}
+                alt="Web3 learning modules"
+                style={{
+                  height: 160,
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 16px 32px rgba(0,0,0,0.3))',
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
       {/* ── Module cards ─────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 48px 40px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '24px 16px' : '40px 48px 40px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {MODULES.map((mod) => (
-            <ModuleCard key={mod.title} mod={mod} onStart={() => navigate(mod.route)} />
+            <ModuleCard key={mod.title} mod={mod} onStart={() => navigate(mod.route)} isMobile={isMobile} />
           ))}
         </div>
 
@@ -188,11 +192,11 @@ export default function LearnHub() {
       </div>
 
       {/* ── Footer ──────────────────────────────────────────────── */}
-      <footer style={{ background: '#fff', padding: '48px 48px 36px', borderTop: '1px solid #EBEBEB', marginTop: 32 }}>
+      <footer style={{ background: '#fff', padding: isMobile ? '32px 16px 24px' : '48px 48px 36px', borderTop: '1px solid #EBEBEB', marginTop: 32 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-            gap: 48, paddingBottom: 36, borderBottom: '1px solid #EBEBEB',
+            display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+            gap: isMobile ? 32 : 48, paddingBottom: 36, borderBottom: '1px solid #EBEBEB',
           }}>
             <div>
               <img src={`${import.meta.env.BASE_URL}BitskwelaLogo-04.png`} alt="Bitskwela" style={{ height: 26, marginBottom: 16 }} />
@@ -239,7 +243,7 @@ export default function LearnHub() {
 }
 
 // individual module card
-function ModuleCard({ mod, onStart }) {
+function ModuleCard({ mod, onStart, isMobile }) {
   return (
     <div
       style={{
@@ -259,10 +263,10 @@ function ModuleCard({ mod, onStart }) {
       {/* Top accent stripe */}
       <div style={{ height: 4, background: mod.color }} />
 
-      <div style={{ padding: '36px 40px', display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+      <div style={{ padding: isMobile ? '24px 20px' : '36px 40px', display: 'flex', gap: isMobile ? 24 : 48, flexWrap: 'wrap' }}>
 
         {/* Left */}
-        <div style={{ flex: 1, minWidth: 280 }}>
+        <div style={{ flex: 1, minWidth: isMobile ? 0 : 280, width: isMobile ? '100%' : undefined }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <span style={{
               fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
@@ -305,8 +309,8 @@ function ModuleCard({ mod, onStart }) {
           </button>
         </div>
 
-        {/* Right — steps list */}
-        <div style={{ minWidth: 220, maxWidth: 300 }}>
+        {/* Right — steps list (hidden on mobile) */}
+        {!isMobile && <div style={{ minWidth: 220, maxWidth: 300 }}>
           <p style={{
             fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
             textTransform: 'uppercase', color: '#AAA', marginBottom: 16,
@@ -336,7 +340,7 @@ function ModuleCard({ mod, onStart }) {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )

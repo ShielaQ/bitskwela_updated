@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useChatbot } from '../hooks/useChatbot'
+import { useChatbot } from '../context/ChatbotContext'
+import { useIsMobile } from '../utils/useIsMobile'
 
 // svg icons
 function IconChat() {
@@ -38,87 +39,6 @@ function IconArrow() {
   )
 }
 
-const INLINE_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*)/g
-
-const renderInline = (text, keyPrefix) => {
-  if (!text) return null
-  return text
-    .split(INLINE_PATTERN)
-    .filter(Boolean)
-    .map((segment, index) => {
-      if (segment.startsWith('**') && segment.endsWith('**')) {
-        return (
-          <strong key={`${keyPrefix}-bold-${index}`}>
-            {segment.slice(2, -2)}
-          </strong>
-        )
-      }
-      if (segment.startsWith('*') && segment.endsWith('*')) {
-        return (
-          <em key={`${keyPrefix}-italic-${index}`}>
-            {segment.slice(1, -1)}
-          </em>
-        )
-      }
-      return <span key={`${keyPrefix}-text-${index}`}>{segment}</span>
-    })
-}
-
-const renderRichText = (text) => {
-  if (typeof text !== 'string') return text
-  const lines = text.split(/\r?\n/)
-  const blocks = []
-  let listItems = []
-
-  const flushList = () => {
-    if (listItems.length) {
-      blocks.push({ type: 'list', items: listItems })
-      listItems = []
-    }
-  }
-
-  lines.forEach((line) => {
-    const match = line.match(/^\s*[-*]\s+(.*)$/)
-    if (match) {
-      listItems.push(match[1])
-      return
-    }
-    flushList()
-    blocks.push({ type: 'paragraph', text: line })
-  })
-
-  flushList()
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {blocks.map((block, index) => {
-        if (block.type === 'list') {
-          return (
-            <ul key={`list-${index}`} style={{ margin: 0, paddingLeft: 18 }}>
-              {block.items.map((item, itemIndex) => (
-                <li
-                  key={`list-${index}-item-${itemIndex}`}
-                  style={{ marginBottom: itemIndex === block.items.length - 1 ? 0 : 4 }}
-                >
-                  {renderInline(item, `list-${index}-item-${itemIndex}`)}
-                </li>
-              ))}
-            </ul>
-          )
-        }
-        if (!block.text.trim()) {
-          return <div key={`spacer-${index}`} style={{ height: 6 }} />
-        }
-        return (
-          <p key={`p-${index}`} style={{ margin: 0 }}>
-            {renderInline(block.text, `p-${index}`)}
-          </p>
-        )
-      })}
-    </div>
-  )
-}
-
 // chatbot widget component
 export default function ChatbotWidget() {
   const {
@@ -126,6 +46,7 @@ export default function ChatbotWidget() {
     messages, showQuickReplies, quickReplies,
     inputText, setInputText, sendMessage,
   } = useChatbot()
+  const isMobile = useIsMobile()
 
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
@@ -177,8 +98,8 @@ export default function ChatbotWidget() {
         <div
           className="slide-up"
           style={{
-            position: 'fixed', bottom: 28, right: 28, zIndex: 200,
-            width: 380,
+            position: 'fixed', bottom: isMobile ? 80 : 88, right: isMobile ? 10 : 24, zIndex: 200,
+            width: isMobile ? 'calc(100vw - 20px)' : 380,
             maxHeight: 'min(540px, calc(100vh - 100px))',
             display: 'flex', flexDirection: 'column',
             background: '#fff',
@@ -271,13 +192,13 @@ export default function ChatbotWidget() {
                     background: msg.type === 'bot' ? '#F4F4F8' : '#F7931A',
                     color:      msg.type === 'bot' ? '#444' : '#fff',
                   }}>
-                    {renderRichText(msg.text)}
+                    {msg.text}
                   </div>
                 </div>
 
                 {/* "Go to Module" link */}
                 {msg.showLearnLink && (
-                  <div style={{ paddingLeft: 32, marginTop: 8 }}>
+                  <div style={{ paddingLeft: isMobile ? 12 : 32, marginTop: 8 }}>
                     <Link
                       to="/learn"
                       onClick={() => setIsOpen(false)}
@@ -301,7 +222,7 @@ export default function ChatbotWidget() {
 
             {/* Quick replies */}
             {showQuickReplies && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 32 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: isMobile ? 12 : 32 }}>
                 {quickReplies.map(qr => (
                   <button
                     key={qr}

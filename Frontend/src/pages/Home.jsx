@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useIsMobile } from '../utils/useIsMobile'
 
 // shared icon
 function IconArrow() {
@@ -131,18 +132,22 @@ const FOOTER_LINKS = [
 
 // main page component
 export default function Home() {
+  const isMobile = useIsMobile()
+
   return (
     <div style={{ paddingTop: 64, background: '#fff' }}>
 
       {/* hero */}
-      <section style={{ background: '#fff', padding: '72px 48px 68px' }}>
+      <section style={{ background: '#fff', padding: isMobile ? '40px 16px 36px' : '72px 48px 68px' }}>
         <div style={{
           maxWidth: 1200, margin: '0 auto',
-          display: 'flex', alignItems: 'center', gap: 56, flexWrap: 'wrap',
+          display: 'flex', alignItems: 'center', gap: 56,
+          flexWrap: 'wrap',
+          flexDirection: isMobile ? 'column' : 'row',
         }}>
 
           {/* Left */}
-          <div style={{ flex: '1 1 400px', minWidth: 300 }}>
+          <div style={{ flex: '1 1 400px', minWidth: isMobile ? 0 : 300, width: isMobile ? '100%' : undefined }}>
             <span style={{
               display: 'inline-block',
               background: '#FEF5E7', color: '#B06800',
@@ -218,25 +223,27 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: hero image */}
-          <div style={{ flex: '1 1 320px', minWidth: 260, display: 'flex', justifyContent: 'center' }}>
-            <img
-              src={`${import.meta.env.BASE_URL}hero-collage.png`}
-              alt="Learn crypto and blockchain with Bitskwela"
-              style={{
-                width: '100%', maxWidth: 440, objectFit: 'contain',
-                filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.09))',
-              }}
-            />
-          </div>
+          {/* Right: hero image — hidden on mobile */}
+          {!isMobile && (
+            <div style={{ flex: '1 1 320px', minWidth: 260, display: 'flex', justifyContent: 'center' }}>
+              <img
+                src={`${import.meta.env.BASE_URL}hero-collage.png`}
+                alt="Learn crypto and blockchain with Bitskwela"
+                style={{
+                  width: '100%', maxWidth: 440, objectFit: 'contain',
+                  filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.09))',
+                }}
+              />
+            </div>
+          )}
         </div>
       </section>
 
       {/* tools section */}
-      <section style={{ background: '#FBF7F0', padding: '72px 48px', borderTop: '1px solid #EDE4D4' }}>
+      <section style={{ background: '#FBF7F0', padding: isMobile ? '40px 16px' : '72px 48px', borderTop: '1px solid #EDE4D4' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
-          <div style={{ maxWidth: 540, marginBottom: 48 }}>
+          <div style={{ maxWidth: 540, marginBottom: isMobile ? 28 : 48 }}>
             <h2 style={{
               fontFamily: "'Unbounded', sans-serif",
               fontSize: 'clamp(20px, 2.4vw, 30px)', fontWeight: 700,
@@ -252,7 +259,7 @@ export default function Home() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
             gap: 20,
           }}>
             {TOOLS.map(tool => (
@@ -263,10 +270,10 @@ export default function Home() {
       </section>
 
       {/* how it works section */}
-      <section style={{ background: '#fff', padding: '72px 48px', borderTop: '1px solid #EBEBEB' }}>
+      <section style={{ background: '#fff', padding: isMobile ? '40px 16px' : '72px 48px', borderTop: '1px solid #EBEBEB' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
-          <div style={{ maxWidth: 480, marginBottom: 52 }}>
+          <div style={{ maxWidth: 480, marginBottom: isMobile ? 28 : 52 }}>
             <h2 style={{
               fontFamily: "'Unbounded', sans-serif",
               fontSize: 'clamp(18px, 2.2vw, 28px)', fontWeight: 700,
@@ -281,7 +288,7 @@ export default function Home() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))',
             gap: 0,
           }}>
             {HOW.map((step, i) => (
@@ -319,7 +326,7 @@ export default function Home() {
       {/* callout banner */}
       <section style={{
         background: '#F7931A',
-        padding: '56px 48px',
+        padding: isMobile ? '36px 16px' : '56px 48px',
       }}>
         <div style={{
           maxWidth: 1200, margin: '0 auto',
@@ -355,12 +362,12 @@ export default function Home() {
       </section>
 
       {/* footer */}
-      <footer style={{ background: '#fff', padding: '56px 48px 40px', borderTop: '1px solid #EBEBEB' }}>
+      <footer style={{ background: '#fff', padding: isMobile ? '36px 16px 28px' : '56px 48px 40px', borderTop: '1px solid #EBEBEB' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1.2fr 1fr 1fr',
-            gap: 48,
+            gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr 1fr',
+            gap: isMobile ? 32 : 48,
             paddingBottom: 40,
             borderBottom: '1px solid #EBEBEB',
           }}>
