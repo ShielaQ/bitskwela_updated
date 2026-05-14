@@ -61,6 +61,47 @@ const ZONE_ICONS = {
   'trash-2':       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
 }
 
+// compact chip version used on mobile — just abbr badge + label
+function MobileChip({ item, isUsed }) {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: ITEM_TYPE,
+    item: { id: item.id, correctZone: item.correctZone },
+    canDrag: !isUsed,
+    collect: m => ({ isDragging: m.isDragging() }),
+  }), [item, isUsed])
+
+  return (
+    <div
+      ref={drag}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '6px 10px 6px 6px',
+        borderRadius: 20,
+        border: `1.5px solid ${isUsed ? '#E8E8E8' : '#D0D0D0'}`,
+        background: isUsed ? '#F8F8F8' : '#fff',
+        opacity: isUsed ? 0.4 : isDragging ? 0.5 : 1,
+        cursor: isUsed ? 'default' : isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        transition: 'opacity 0.15s',
+        pointerEvents: isUsed ? 'none' : 'auto',
+        boxShadow: isDragging ? '0 4px 12px rgba(0,0,0,0.12)' : 'none',
+      }}
+    >
+      <div style={{
+        width: 26, height: 26, borderRadius: 13, flexShrink: 0,
+        background: item.bg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 9, fontWeight: 700, color: item.color, fontFamily: 'monospace',
+      }}>
+        {item.abbr}
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 600, color: '#222', whiteSpace: 'nowrap' }}>
+        {item.label}
+      </span>
+    </div>
+  )
+}
+
 // the drag card on the left
 function DragCard({ item, isUsed }) {
   const [{ isDragging }, drag] = useDrag(() => ({
@@ -116,7 +157,7 @@ function DragCard({ item, isUsed }) {
 }
 
 // the drop target area
-function DropZone({ zone, placedItem, onDrop, explanation, shaking }) {
+function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ITEM_TYPE,
     drop: draggedItem => onDrop(draggedItem, zone.id),
@@ -141,13 +182,13 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking }) {
         border: `2px dashed ${borderColor}`,
         borderRadius: 12,
         background: bg,
-        padding: '28px 20px',
+        padding: isMobile ? '14px 10px' : '28px 20px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        minHeight: 160,
+        minHeight: isMobile ? 120 : 160,
         transition: 'border-color 0.15s, background 0.15s',
         position: 'relative',
       }}
@@ -165,12 +206,14 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking }) {
           }}>
             {ZONE_ICONS[zone.icon] || null}
           </div>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#333' }}>
+          <p style={{ margin: 0, fontSize: isMobile ? 12 : 14, fontWeight: 600, color: '#333' }}>
             {zone.label}
           </p>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#999', maxWidth: 160 }}>
-            {zone.desc}
-          </p>
+          {!isMobile && (
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#999', maxWidth: 160 }}>
+              {zone.desc}
+            </p>
+          )}
           {validHover && (
             <p style={{ margin: '8px 0 0', fontSize: 12, fontWeight: 600, color: '#F7931A' }}>
               Drop here
@@ -218,8 +261,8 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking }) {
             </div>
           </div>
 
-          {/* Explanation */}
-          {explanation && (
+          {/* Explanation — hidden on mobile to save space */}
+          {explanation && !isMobile && (
             <p style={{
               margin: 0, fontSize: 12, color: '#555',
               lineHeight: 1.55, maxWidth: 220,
@@ -301,7 +344,10 @@ export default function Simulation() {
 
   return (
     <div style={{
-      width: '100vw', height: '100vh', overflow: 'hidden',
+      width: '100vw',
+      height: isMobile ? 'auto' : '100vh',
+      minHeight: isMobile ? '100vh' : 'auto',
+      overflow: isMobile ? 'visible' : 'hidden',
       display: 'flex', flexDirection: 'column',
       paddingTop: 64,
       background: '#F8F8F8',
@@ -346,24 +392,24 @@ export default function Simulation() {
         </button>
       </div>
 
-      {/* ── Mobile items row ──────────────────────────────────── */}
+      {/* ── Mobile items row — compact chips ─────────────────── */}
       {isMobile && (
         <div style={{
           flexShrink: 0,
-          padding: '10px 16px 0',
-          borderBottom: '1px solid #F0F0F0',
+          padding: '10px 16px 12px',
+          borderBottom: '1px solid #EBEBEB',
           background: '#fff',
         }}>
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#AAA', marginBottom: 8 }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#AAA', marginBottom: 8, marginTop: 0 }}>
             Drag these items
           </p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {step.items.map(item => (
-              <DragCard key={item.id} item={item} isUsed={usedItems.has(item.id)} />
+              <MobileChip key={item.id} item={item} isUsed={usedItems.has(item.id)} />
             ))}
           </div>
           {wrongHint && (
-            <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, color: '#DC2626', marginBottom: 10 }}>
+            <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, color: '#DC2626' }}>
               {wrongHint}
             </div>
           )}
@@ -371,7 +417,7 @@ export default function Simulation() {
       )}
 
       {/* ── Main body ──────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', overflow: isMobile ? 'auto' : 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
 
         {/* Left sidebar — hidden on mobile */}
         <div style={{
@@ -410,7 +456,7 @@ export default function Simulation() {
 
         {/* Main canvas */}
         <div style={{
-          flex: 1, overflow: 'hidden',
+          flex: 1, overflow: isMobile ? 'auto' : 'hidden',
           display: 'flex', flexDirection: 'column',
           padding: isMobile ? '12px 12px' : '20px 28px',
           gap: 16,
@@ -420,11 +466,11 @@ export default function Simulation() {
           {/* Instruction banner */}
           <div style={{
             flexShrink: 0,
-            padding: '12px 16px',
+            padding: isMobile ? '10px 12px' : '12px 16px',
             borderRadius: 8,
             background: allDone ? '#F0FDF4' : '#FEF5E7',
             border: `1px solid ${allDone ? '#A3E4B8' : '#FDDFA0'}`,
-            fontSize: 14, color: '#444', lineHeight: 1.55,
+            fontSize: isMobile ? 13 : 14, color: '#444', lineHeight: 1.5,
           }}>
             {allDone ? (
               <span>
@@ -441,11 +487,12 @@ export default function Simulation() {
 
           {/* Drop zones */}
           <div style={{
-            flex: 1, minHeight: 0,
+            flex: isMobile ? 'none' : 1,
+            minHeight: 0,
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gridTemplateRows: isMobile ? 'auto' : 'repeat(2, 1fr)',
-            gap: 16,
+            gap: isMobile ? 10 : 16,
           }}>
             {step.zones.map(zone => (
               <DropZone
@@ -455,9 +502,31 @@ export default function Simulation() {
                 onDrop={handleDrop}
                 explanation={placements[zone.id] ? step.explanations[zone.id] : null}
                 shaking={shaking === zone.id}
+                isMobile={isMobile}
               />
             ))}
           </div>
+
+          {/* Mobile explanations — shown below zones when all done */}
+          {allDone && isMobile && (
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#AAA', margin: 0 }}>
+                Why each answer is correct
+              </p>
+              {step.zones.map(zone => (
+                placements[zone.id] && step.explanations[zone.id] ? (
+                  <div key={zone.id} style={{ padding: '10px 12px', borderRadius: 8, background: '#fff', border: '1px solid #E8E8E8' }}>
+                    <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#222' }}>
+                      {placements[zone.id].label} → {zone.label}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 12, color: '#555', lineHeight: 1.5 }}>
+                      {step.explanations[zone.id]}
+                    </p>
+                  </div>
+                ) : null
+              ))}
+            </div>
+          )}
 
           {/* Next step CTA */}
           {allDone && (
