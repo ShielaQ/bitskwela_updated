@@ -182,13 +182,13 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
         border: `2px dashed ${borderColor}`,
         borderRadius: 12,
         background: bg,
-        padding: isMobile ? '14px 10px' : '28px 20px',
+        padding: isMobile ? '14px 10px' : (filled ? '16px 18px' : '24px 16px'),
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        minHeight: isMobile ? 120 : 160,
+        alignItems: filled ? 'flex-start' : 'center',
+        justifyContent: filled ? 'flex-start' : 'center',
+        textAlign: filled ? 'left' : 'center',
+        minHeight: isMobile ? 110 : 140,
         transition: 'border-color 0.15s, background 0.15s',
         position: 'relative',
       }}
@@ -226,56 +226,51 @@ function DropZone({ zone, placedItem, onDrop, explanation, shaking, isMobile }) 
           )}
         </>
       ) : (
-        <>
-          {/* Check badge */}
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            background: '#16A34A',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 10,
-          }}>
-            <IconCheck />
-          </div>
+        <div style={{ width: '100%', textAlign: 'left' }}>
 
-          {/* Placed item chip */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '8px 12px', borderRadius: 8,
-            background: '#fff', border: '1px solid #A3E4B8',
-            marginBottom: explanation ? 10 : 0,
-          }}>
+          {/* Header row: check + placed item */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{
-              width: 24, height: 24, borderRadius: 5,
-              background: placedItem.bg,
+              width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+              background: '#16A34A',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10, fontWeight: 700, color: placedItem.color, flexShrink: 0,
-              fontFamily: 'monospace',
             }}>
-              {placedItem.abbr}
+              <IconCheck />
             </div>
-            <div style={{ textAlign: 'left' }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#222' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 7, flex: 1,
+              padding: '5px 10px', borderRadius: 8,
+              background: '#fff', border: '1px solid #A3E4B8',
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: 5, flexShrink: 0,
+                background: placedItem.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 9, fontWeight: 700, color: placedItem.color, fontFamily: 'monospace',
+              }}>
+                {placedItem.abbr}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#222', flex: 1 }}>
                 {placedItem.label}
-              </p>
-              <p style={{ margin: '1px 0 0', fontSize: 11, color: '#16A34A' }}>Correct</p>
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#16A34A', flexShrink: 0 }}>
+                Correct ✓
+              </span>
             </div>
           </div>
 
-          {/* Explanation — hidden on mobile to save space */}
+          {/* Zone label */}
+          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {zone.label}
+          </p>
+
+          {/* Explanation */}
           {explanation && !isMobile && (
-            <p style={{
-              margin: 0, fontSize: 12, color: '#555',
-              lineHeight: 1.55, maxWidth: 220,
-              background: '#fff',
-              border: '1px solid #E8E8E8',
-              borderRadius: 6,
-              padding: '8px 10px',
-              textAlign: 'left',
-            }}>
+            <p style={{ margin: 0, fontSize: 12, color: '#555', lineHeight: 1.6 }}>
               {explanation}
             </p>
           )}
-        </>
+        </div>
       )}
     </div>
   )
@@ -456,7 +451,7 @@ export default function Simulation() {
 
         {/* Main canvas */}
         <div style={{
-          flex: 1, overflow: isMobile ? 'auto' : 'hidden',
+          flex: 1, overflow: 'auto',
           display: 'flex', flexDirection: 'column',
           padding: isMobile ? '12px 12px' : '20px 28px',
           gap: 16,
@@ -487,11 +482,9 @@ export default function Simulation() {
 
           {/* Drop zones */}
           <div style={{
-            flex: isMobile ? 'none' : 1,
-            minHeight: 0,
+            flex: 'none',
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gridTemplateRows: isMobile ? 'auto' : 'repeat(2, 1fr)',
             gap: isMobile ? 10 : 16,
           }}>
             {step.zones.map(zone => (
