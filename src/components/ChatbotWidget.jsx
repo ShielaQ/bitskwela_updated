@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useChatbot } from '../context/ChatbotContext'
+import { useIsMobile } from '../utils/useIsMobile'
 
 // svg icons
 function IconChat() {
@@ -45,6 +46,7 @@ export default function ChatbotWidget() {
     messages, showQuickReplies, quickReplies,
     inputText, setInputText, sendMessage,
   } = useChatbot()
+  const isMobile = useIsMobile()
 
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
@@ -96,8 +98,8 @@ export default function ChatbotWidget() {
         <div
           className="slide-up"
           style={{
-            position: 'fixed', bottom: 28, right: 28, zIndex: 200,
-            width: 380,
+            position: 'fixed', bottom: isMobile ? 80 : 88, right: isMobile ? 10 : 24, zIndex: 200,
+            width: isMobile ? 'calc(100vw - 20px)' : 380,
             maxHeight: 'min(540px, calc(100vh - 100px))',
             display: 'flex', flexDirection: 'column',
             background: '#fff',
@@ -196,7 +198,7 @@ export default function ChatbotWidget() {
 
                 {/* "Go to Module" link */}
                 {msg.showLearnLink && (
-                  <div style={{ paddingLeft: 32, marginTop: 8 }}>
+                  <div style={{ paddingLeft: isMobile ? 12 : 32, marginTop: 8 }}>
                     <Link
                       to="/learn"
                       onClick={() => setIsOpen(false)}
@@ -220,7 +222,7 @@ export default function ChatbotWidget() {
 
             {/* Quick replies */}
             {showQuickReplies && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 32 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: isMobile ? 12 : 32 }}>
                 {quickReplies.map(qr => (
                   <button
                     key={qr}

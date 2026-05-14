@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDrag, useDrop } from 'react-dnd'
 import { getModule } from '../data/simulationData'
+import { useIsMobile } from '../utils/useIsMobile'
 
 const ITEM_TYPE = 'SIM_ITEM'
 
@@ -242,6 +243,7 @@ export default function Simulation() {
   const { module } = useParams()
   const navigate   = useNavigate()
   const moduleData = getModule(module)
+  const isMobile   = useIsMobile()
 
   const [stepIndex,  setStepIndex]  = useState(0)
   const [placements, setPlacements] = useState({})
@@ -311,7 +313,7 @@ export default function Simulation() {
         height: 52,
         background: '#1A1A2E',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 40px',
+        padding: isMobile ? '0 16px' : '0 40px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -344,17 +346,41 @@ export default function Simulation() {
         </button>
       </div>
 
-      {/* ── Main body ──────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+      {/* ── Mobile items row ──────────────────────────────────── */}
+      {isMobile && (
+        <div style={{
+          flexShrink: 0,
+          padding: '10px 16px 0',
+          borderBottom: '1px solid #F0F0F0',
+          background: '#fff',
+        }}>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#AAA', marginBottom: 8 }}>
+            Drag these items
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 10 }}>
+            {step.items.map(item => (
+              <DragCard key={item.id} item={item} isUsed={usedItems.has(item.id)} />
+            ))}
+          </div>
+          {wrongHint && (
+            <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, color: '#DC2626', marginBottom: 10 }}>
+              {wrongHint}
+            </div>
+          )}
+        </div>
+      )}
 
-        {/* Left sidebar */}
+      {/* ── Main body ──────────────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'flex', overflow: isMobile ? 'auto' : 'hidden', minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
+
+        {/* Left sidebar — hidden on mobile */}
         <div style={{
           flexShrink: 0, width: 268,
           background: '#fff',
           borderRight: '1px solid #E8E8E8',
           padding: '18px 14px',
           overflowY: 'auto',
-          display: 'flex', flexDirection: 'column', gap: 0,
+          display: isMobile ? 'none' : 'flex', flexDirection: 'column', gap: 0,
         }}>
           <p style={{
             fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
@@ -386,7 +412,7 @@ export default function Simulation() {
         <div style={{
           flex: 1, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
-          padding: '20px 28px',
+          padding: isMobile ? '12px 12px' : '20px 28px',
           gap: 16,
           minWidth: 0,
         }}>
@@ -417,8 +443,8 @@ export default function Simulation() {
           <div style={{
             flex: 1, minHeight: 0,
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gridTemplateRows: 'repeat(2, 1fr)',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gridTemplateRows: isMobile ? 'auto' : 'repeat(2, 1fr)',
             gap: 16,
           }}>
             {step.zones.map(zone => (

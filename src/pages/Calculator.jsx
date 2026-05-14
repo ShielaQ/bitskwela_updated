@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useIsMobile } from '../utils/useIsMobile'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
@@ -99,6 +100,7 @@ export default function Calculator() {
   const [horizonDays,  setHorizonDays]  = useState(365)
   const [mode,         setMode]         = useState('Moderate')
   const [result,       setResult]       = useState(null)
+  const isMobile = useIsMobile()
 
   const allOptions = Object.entries(INVESTMENT_TYPES).flatMap(([group, items]) =>
     items.map(i => ({ ...i, group }))
@@ -125,7 +127,7 @@ export default function Calculator() {
     <div style={{ paddingTop: 64, minHeight: '100vh', background: '#F8F8F8' }}>
 
       {/* ── Page header ──────────────────────────────────────── */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #EBEBEB', padding: '48px 48px 40px' }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid #EBEBEB', padding: isMobile ? '32px 16px 28px' : '48px 48px 40px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           {/* Breadcrumb */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 13, color: '#AAA' }}>
@@ -155,10 +157,10 @@ export default function Calculator() {
       </div>
 
       {/* ── Two-column layout ──────────────────────────────── */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 48px 80px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '24px 16px 40px' : '40px 48px 80px' }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: result ? '1fr 1fr' : 'minmax(0, 560px)',
+          gridTemplateColumns: isMobile ? '1fr' : (result ? '1fr 1fr' : 'minmax(0, 560px)'),
           gap: 24,
           alignItems: 'start',
         }}>
@@ -169,6 +171,7 @@ export default function Calculator() {
             border: '1px solid #E8E8E8',
             borderRadius: 14,
             overflow: 'hidden',
+            maxHeight: isMobile ? 'none' : '100%',
           }}>
             {/* Panel header */}
             <div style={{
@@ -371,7 +374,7 @@ export default function Calculator() {
                 </p>
                 <p style={{
                   margin: '0 0 10px',
-                  fontSize: 44, fontWeight: 800, color: '#222',
+                  fontSize: isMobile ? 32 : 44, fontWeight: 800, color: '#222',
                   lineHeight: 1, letterSpacing: '-1px',
                 }}>
                   {fmtPeso(result.projected)}
