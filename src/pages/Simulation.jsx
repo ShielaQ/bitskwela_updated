@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDrag, useDrop } from 'react-dnd'
 import { getModule } from '../data/simulationData'
@@ -322,6 +322,15 @@ export default function Simulation() {
   const [placements, setPlacements] = useState({})
   const [shaking,    setShaking]    = useState(null)
   const [wrongHint,  setWrongHint]  = useState(null)
+  const [completed,  setCompleted]  = useState(false)
+  const [countdown,  setCountdown]  = useState(4)
+
+  useEffect(() => {
+    if (!completed) return
+    if (countdown === 0) { navigate('/learn'); return }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [completed, countdown, navigate])
 
   if (!moduleData) {
     return (
@@ -368,8 +377,73 @@ export default function Simulation() {
       setShaking(null)
       setWrongHint(null)
     } else {
-      navigate('/learn')
+      setCompleted(true)
     }
+  }
+
+  if (completed) {
+    return (
+      <div style={{
+        width: '100vw', minHeight: '100vh',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        paddingTop: 64, background: '#fff',
+        textAlign: 'center', padding: '64px 24px',
+      }}>
+        {/* Big checkmark */}
+        <div style={{
+          width: 88, height: 88, borderRadius: '50%',
+          background: '#F0FDF4', border: '3px solid #16A34A',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 28,
+        }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+            stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+
+        <p style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#F7931A', marginBottom: 12 }}>
+          Module Complete
+        </p>
+
+        <h1 style={{
+          fontFamily: "'Ubuntu', sans-serif",
+          fontSize: isMobile ? 28 : 36, fontWeight: 800,
+          color: '#1A1A1A', marginBottom: 14, lineHeight: 1.2,
+        }}>
+          Congrats! You finished<br />{moduleData.title}
+        </h1>
+
+        <p style={{ fontSize: 15, color: '#666', maxWidth: 400, lineHeight: 1.7, marginBottom: 36 }}>
+          Great work getting through all {totalSteps} steps. Keep going — there are more modules waiting for you.
+        </p>
+
+        {/* Countdown ring */}
+        <p style={{ fontSize: 13, color: '#AAA', marginBottom: 20 }}>
+          Taking you back in <strong style={{ color: '#555' }}>{countdown}s</strong>...
+        </p>
+
+        <Link
+          to="/learn"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            height: 48, padding: '0 28px', borderRadius: 999,
+            background: '#F7931A', color: '#fff',
+            fontSize: 15, fontWeight: 700, textDecoration: 'none',
+            transition: 'opacity 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+        >
+          Back to Learn Hub
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </Link>
+      </div>
+    )
   }
 
   return (
